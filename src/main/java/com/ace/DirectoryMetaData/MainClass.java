@@ -19,7 +19,11 @@ public class MainClass {
 	
 	public static void main(String[] args) throws InterruptedException {
 
-		String directoryPath = "C://Users//rkau23";
+		/*String test = "D:\\apache-tomcat-7.0.82\\logs";
+		
+		System.out.println(test.lastIndexOf("\\"));*/
+		
+		String directoryPath = "D://";
 		
 		fileCache = new HashMap<String, Boolean>();
 		
@@ -32,7 +36,7 @@ public class MainClass {
 		DirectoryScannerRunnable scannerTask = new DirectoryScannerRunnable(directoryPath, fileCache,queue);
 		DirectoryConsumerRunnable consumerTask = new DirectoryConsumerRunnable(fileCache,queue);
 
-		scheduler.scheduleAtFixedRate(scannerTask, 0, 5, TimeUnit.MINUTES);
+		scheduler.scheduleAtFixedRate(scannerTask, 0, 1, TimeUnit.MINUTES);
 		
 		//consumerScheduler.scheduleAtFixedRate(consumerTask, 5, 5, TimeUnit.SECONDS);
 		

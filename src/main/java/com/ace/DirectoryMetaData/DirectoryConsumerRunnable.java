@@ -14,6 +14,8 @@ public class DirectoryConsumerRunnable implements Runnable{
 	Map<String, Boolean> fileCache;
 	
 	BlockingQueue<Directory> queue;
+	
+	private DirectoryProcessor directoryProcessor;
 
 	public DirectoryConsumerRunnable(Map<String, Boolean> fileCache, BlockingQueue<Directory> queue) {
 		super();
@@ -30,8 +32,9 @@ public class DirectoryConsumerRunnable implements Runnable{
 			try {
 				Directory directory = queue.take();
 				System.out.println(directory.getName() + " received for processing.");
-				executorService.submit(new DirectoryProcessorRunnable(directory));
-				System.out.println(directory.getName() + " submitted for processing.");
+				directoryProcessor = new DirectoryProcessor(directory);
+				directoryProcessor.processDirectory();
+				System.out.println(directory.getName() + " processed.");
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -39,7 +39,7 @@ public class DirectoryScannerRunnable implements Runnable {
 		System.out.println("Directory scanning started");
 
 		File root = new File(this.getDirectoryPath());
-		String[] extensions = { "csv" };
+		String[] extensions = { "csv", "txt" };
 		boolean recursive = true;
 
 		Collection<File> files = FileUtils.listFiles(root, extensions, recursive);
