@@ -26,6 +26,11 @@ public class MainClass {
 	 */
 	static BlockingQueue<Directory> queue;
 	
+	/* This program requires three command line parameter, 
+	 * path of directory from where scanning should start, 
+	 * sorting parameter (WORDS,VOWELS,LETTERS,SPECIAL_CHAR),
+	 * and sorting order (either ASC or DESC).
+	*/
 	public static void main(String[] args) throws InterruptedException {
 
 		String directoryPath = args[0];
@@ -39,17 +44,13 @@ public class MainClass {
 		queue = new LinkedBlockingQueue<>();
 
 		ScheduledExecutorService pollingScheduler = Executors.newSingleThreadScheduledExecutor();
-		// ScheduledExecutorService consumerScheduler =
-		// Executors.newSingleThreadScheduledExecutor();
 
 		DirectoryScannerRunnable scannerTask = new DirectoryScannerRunnable(directoryPath, fileCache, queue);
 
 		DirectoryConsumerRunnable consumerTask = new DirectoryConsumerRunnable(queue,
 				"ASC".equals(sortOrder) ? SortOrder.ASC : SortOrder.DESC, CountParam.getEnumFromParam(sortParam));
 
-		pollingScheduler.scheduleAtFixedRate(scannerTask, 0, 1, TimeUnit.MINUTES);
-
-		// consumerScheduler.scheduleAtFixedRate(consumerTask, 5, 5, TimeUnit.SECONDS);
+		pollingScheduler.scheduleAtFixedRate(scannerTask, 0, 30, TimeUnit.MINUTES);
 
 		new Thread(consumerTask).start();
 
