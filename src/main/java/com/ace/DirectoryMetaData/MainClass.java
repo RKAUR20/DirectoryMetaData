@@ -22,7 +22,7 @@ public class MainClass {
 	static Map<String, Long> fileCache;
 	
 	/* This queue will have Directory object which contain name of directory and list of unprocessed file in that directory. 
-	 * DirectoryScanner will pool changes and put object in this queue which will be consumed by Directory consume.
+	 * DirectoryScanner will poll changes and put object in this queue which will be consumed by Directory consumer.
 	 */
 	static BlockingQueue<Directory> queue;
 	
@@ -30,7 +30,7 @@ public class MainClass {
 	 * path of directory from where scanning should start, 
 	 * sorting parameter (WORDS,VOWELS,LETTERS,SPECIAL_CHAR),
 	 * and sorting order (either ASC or DESC).
-	*/
+	 */
 	public static void main(String[] args) throws InterruptedException {
 
 		String directoryPath = args[0];
