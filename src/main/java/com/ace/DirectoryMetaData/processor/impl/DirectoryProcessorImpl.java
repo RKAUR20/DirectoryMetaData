@@ -1,4 +1,4 @@
-package com.ace.DirectoryMetaData;
+package com.ace.DirectoryMetaData.processor.impl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,18 +16,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import com.ace.DirectoryMetaData.comparator.WordSortComparator;
+import com.ace.DirectoryMetaData.comparator.FileResultComparator;
 import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.CountResult;
 import org.apache.commons.io.FileUtils;
 
 import com.ace.DirectoryMetaData.model.Directory;
 import com.ace.DirectoryMetaData.model.FileResult;
-import com.ace.DirectoryMetaData.model.ResultFileExtension;
+import com.ace.DirectoryMetaData.model.OutputFileExtension;
 import com.ace.DirectoryMetaData.model.SortOrder;
+import com.ace.DirectoryMetaData.processor.DirectoryProcessor;
+import com.ace.DirectoryMetaData.runnable.FileProcessorRunnable;
 import com.ace.DirectoryMetaData.util.OutputFilePublisher;
 
-public class DirectoryProcessor {
+public class DirectoryProcessorImpl implements DirectoryProcessor{
 	
 	ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
@@ -35,25 +37,26 @@ public class DirectoryProcessor {
 	
 	private OutputFilePublisher outputFilePublisher;
 
-	public DirectoryProcessor(Directory directory) {
+	public DirectoryProcessorImpl(Directory directory) {
 		this.directory = directory;
 		outputFilePublisher = new OutputFilePublisher();
 	}
 
+	@Override
 	public void processDirectory() {
 		// TODO Auto-generated method stub
 		System.out.println("Processing of " + directory.getName() + " started.");
 
 		List<Future<FileResult>> futureFileResultList = new ArrayList<>();
 		
-		// Submitting all the new files in directory to executor for MTD creation.
+		// Submitting all the new files in directory to executor for result calculation and MTD creation.
 		directory.getFiles().forEach(file -> {
 			Future<FileResult> futureFileResult = executorService.submit(new FileProcessorRunnable(file));
 			futureFileResultList.add(futureFileResult);
 			System.out.println(file + " submited for .mtd creation");
 		});
 		
-		
+		System.out.println("Getting existing MTD result List for " + directory.getName());
 		/* Since new files have been added to the directory, 
 		 * so value of DMTD and SMTD would have been changed.
 		 * Thus, meanwhile fetch already created MTD files and 
@@ -61,14 +64,10 @@ public class DirectoryProcessor {
 		 * and let other threads calculate MTD result for new files added in the directory..
 		 */
 		List<FileResult> fileResultList = this.getAlreadyCalculatedMTDResult();
-		System.out.println("Already calculated MTD");
-		fileResultList.stream().forEach(fileResult ->{
-			System.out.println(fileResult.getFileName());
-			fileResult.getResultMap().forEach( (k,v) -> System.out.println(k + " : " + v));
-		});
-		System.out.println();
 		
-		//Adding new files MTD to already existing MTD Result list
+		System.out.println("Fetching existing MTD result List for " + directory.getName() + " completed");
+		
+		//Adding new files Result list to already existing MTD Result list
 		futureFileResultList.stream().forEach(future -> {
 			try {
 				fileResultList.add(future.get());
@@ -87,15 +86,20 @@ public class DirectoryProcessor {
 
 	private void calculateAndCreateSMTDResult(List<FileResult> fileResultList) {
 		// TODO Auto-generated method stub
-		System.out.println("calculateAndCreateSMTDResult");
-		Collections.sort(fileResultList, new WordSortComparator(CountParam.WORDS, SortOrder.DESC));
+		System.out.println("Sorting MTDS for " + directory.getName() + " Directory");
+		Collections.sort(fileResultList, new FileResultComparator(CountParam.WORDS, SortOrder.DESC));
 		fileResultList.stream().forEach(fileResult -> {
 			System.out.println(fileResult.toString());
 		});
+		
+		System.out.println("Calling Output publisher for SMTD of " + directory.getName() + " Directory");
+		
+		outputFilePublisher.createSMTDFileFromResultList(fileResultList, directory.getName());
 	}
 
 	private void calculateAndCreateDMTDResult(List<FileResult> fileResultList) {
 		// TODO Auto-generated method stub
+		System.out.println("Calculating DMTD result for " + directory.getName());
 		FileResult directoryResult = new FileResult(directory.getName());
 		Long letterCount = 0l, vowelCount = 0l, wordCount = 0l, specialCharCount = 0l;
 
@@ -126,7 +130,8 @@ public class DirectoryProcessor {
 		directoryResultMap.put(CountParam.SPECIAL_CHAR, specialCharCount);
 		directoryResult.setResultMap(directoryResultMap);
 
-		outputFilePublisher.createOutputFromResultList(directoryResult, ResultFileExtension.DMTD);
+		System.out.println("Calling Output Publisher for publishing DMTD for " + directory.getName());
+		outputFilePublisher.createOutputFromFileResult(directoryResult, OutputFileExtension.DMTD);
 
 		System.out.println("calculateAndCreateDMTDResult");
 	}
@@ -143,7 +148,7 @@ public class DirectoryProcessor {
 		/* There could be a case that while we are fetching existing MTDs, 
 		 * executor thread has created MTD for new file. So filtering out new MTDS. */
 		Collection<File> filterMTDs = allMTDfiles.stream()
-				.filter(file -> exists(directory.getFiles(),file.getAbsolutePath())).collect(Collectors.toList());
+				.filter(file -> this.exists(directory.getFiles(),file.getAbsolutePath())).collect(Collectors.toList());
 
 		return this.convertMTDsToFileResultList(filterMTDs);
 	}
@@ -164,9 +169,8 @@ public class DirectoryProcessor {
 		filterMTDs.stream().forEach(mtd -> {
 			FileResult fileResult = new FileResult(mtd.getAbsolutePath());
 
-			Map<CountParam, Long> resultMap = this.getCountResultFromFile(mtd.getAbsolutePath());
-			System.out.println("File Result of :: " + mtd.getAbsolutePath());
-			resultMap.forEach((k,v) -> System.out.println(k +" : " + v));
+			Map<CountParam, Long> resultMap = this.getCountResultMapFromFile(mtd.getAbsolutePath());
+			
 			fileResult.setResultMap(resultMap);
 			fileResultList.add(fileResult);
 		});
@@ -174,7 +178,7 @@ public class DirectoryProcessor {
 		return fileResultList;
 	}
 
-	private Map<CountParam, Long> getCountResultFromFile(String filePath) {
+	private Map<CountParam, Long> getCountResultMapFromFile(String filePath) {
 		// TODO Auto-generated method stub
 		Map<CountParam, Long> resultMap = new HashMap<>();
 		
@@ -185,8 +189,8 @@ public class DirectoryProcessor {
 			input = new Scanner(new FileReader(filePath));
 
 			if (!input.hasNext()) {
-				System.out.println("File is empty. Aborting Program");
-				return null;
+				System.out.println("File is empty. Setting default resultMap with 0 count");
+				return this.getDefaultResultMap(resultMap);
 			}
 
 			while (input.hasNextLine()) {
@@ -199,6 +203,15 @@ public class DirectoryProcessor {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return resultMap;
+	}
+	
+	private Map<CountParam, Long> getDefaultResultMap(Map<CountParam, Long> resultMap) {
+		// TODO Auto-generated method stub
+		resultMap.put(CountParam.WORDS, 0l);
+		resultMap.put(CountParam.LETTERS, 0l);
+		resultMap.put(CountParam.VOWELS, 0l);
+		resultMap.put(CountParam.SPECIAL_CHAR, 0l);
 		return resultMap;
 	}
 

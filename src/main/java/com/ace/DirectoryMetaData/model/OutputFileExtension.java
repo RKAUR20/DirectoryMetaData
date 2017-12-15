@@ -1,5 +1,5 @@
 package com.ace.DirectoryMetaData.model;
 
-public enum ResultFileExtension {
+public enum OutputFileExtension {
 	MTD, DMTD, SMTD
 }

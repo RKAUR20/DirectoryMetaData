@@ -10,33 +10,35 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.ace.DirectoryMetaData.model.Directory;
+import com.ace.DirectoryMetaData.runnable.DirectoryConsumerRunnable;
+import com.ace.DirectoryMetaData.runnable.DirectoryScannerRunnable;
 
 public class MainClass {
 	
+	//It will have key as file absolute path and value as file processed status (TRUE processed, False not processed)
 	static Map<String, Boolean> fileCache;
 	
+	/* This queue will have Directory object which contain name of directory and list of unprocessed file in that directory. 
+	 * DirectoryScanner will pool changes and put object in this queue which will be consumed by Directory consume.
+	 */
 	static BlockingQueue<Directory> queue;
 	
 	public static void main(String[] args) throws InterruptedException {
 
-		/*String test = "D:\\apache-tomcat-7.0.82\\logs";
-		
-		System.out.println(test.lastIndexOf("\\"));*/
-		
-		String directoryPath = "D://";
+		String directoryPath = "C://Users//rkau23";
 		
 		fileCache = new HashMap<String, Boolean>();
 		
 		queue = new LinkedBlockingQueue<>();
 		
 		
-		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+		ScheduledExecutorService pollingScheduler = Executors.newSingleThreadScheduledExecutor();
 		//ScheduledExecutorService consumerScheduler = Executors.newSingleThreadScheduledExecutor();
 
 		DirectoryScannerRunnable scannerTask = new DirectoryScannerRunnable(directoryPath, fileCache,queue);
 		DirectoryConsumerRunnable consumerTask = new DirectoryConsumerRunnable(fileCache,queue);
 
-		scheduler.scheduleAtFixedRate(scannerTask, 0, 1, TimeUnit.MINUTES);
+		pollingScheduler.scheduleAtFixedRate(scannerTask, 0, 1, TimeUnit.MINUTES);
 		
 		//consumerScheduler.scheduleAtFixedRate(consumerTask, 5, 5, TimeUnit.SECONDS);
 		

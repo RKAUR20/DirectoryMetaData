@@ -1,4 +1,4 @@
-package com.ace.DirectoryMetaData;
+package com.ace.DirectoryMetaData.runnable;
 
 import java.io.File;
 import java.util.Collection;
@@ -53,16 +53,17 @@ public class DirectoryScannerRunnable implements Runnable {
 		System.out.println(directoryFilesMap);
 
 		/*
-		 * Processing Directory- Files Map and adding each 
-		 * directory into blocking queue as well as putting all files in cache.
+		 * Processing Directory - Files Map and adding each 
+		 * directory into blocking queue as well as putting all files in 
+		 * cache so that they are not picked in next scan.
 		 * */
 		directoryFilesMap.forEach((key, value) -> {
-			System.out.println("Processing directory :: " + key);
-			System.out.println("Values :: "+ value);
+			
 			Directory directory = new Directory();
 			directory.setName(key);
 			
 			value.stream().forEach(v -> {
+				System.out.println(v.lastModified());
 				directory.getFiles().add(v.getAbsolutePath());
 				fileCache.put(v.getAbsolutePath(), Boolean.FALSE);
 			});

@@ -3,42 +3,43 @@ package com.ace.DirectoryMetaData.util;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
 
+import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.FileResult;
-import com.ace.DirectoryMetaData.model.ResultFileExtension;
+import com.ace.DirectoryMetaData.model.OutputFileExtension;
 
 public class OutputFilePublisher {
 
-	public void createOutputFromResultList(FileResult fileResultList, ResultFileExtension extension) {
+	public void createOutputFromFileResult(FileResult fileResult, OutputFileExtension extension) {
 		// TODO Auto-generated method stub
 		switch (extension) {
 		case MTD:
-			createMTDFileFromResultList(fileResultList);
-			break;
-		case SMTD:
-			createSMTDFileFromResultList(fileResultList);
+			createMTDFileFromResultList(fileResult);
 			break;
 		case DMTD:
-			createDMTDFileFromResultList(fileResultList);
+			createDMTDFileFromResultList(fileResult);
+			break;
+		default:
 			break;
 		}
 	}
 
-	private void createDMTDFileFromResultList(FileResult fileResultList) {
+	private void createDMTDFileFromResultList(FileResult fileResult) {
 		// TODO Auto-generated method stub
 		PrintStream out;
 		try {
-			String directoryName = fileResultList.getFileName();
-			System.out.println("Creating DMTD for : " + directoryName);
-			System.out.println(directoryName + "/" + directoryName.substring(directoryName.lastIndexOf("\\") + 1));
+			String directoryName = fileResult.getFileName();
+			System.out.println("Creating DMTD for directory : " + directoryName);
 
 			out = new PrintStream(
 					new File(directoryName + "/" + directoryName.substring(directoryName.lastIndexOf("\\") + 1))
 							+ ".dmtd");
 
-			fileResultList.getResultMap().forEach((k,v) -> out.println(k + " : " + v));
+			this.writeResultMapToFile(fileResult.getResultMap(), out);
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -46,18 +47,42 @@ public class OutputFilePublisher {
 		}
 	}
 
-	private void createSMTDFileFromResultList(FileResult fileResultList) {
+	private void writeResultMapToFile(Map<CountParam, Long> resultMap, PrintStream out) {
 		// TODO Auto-generated method stub
-		
+		resultMap.forEach((k,v) -> out.println(k + " : " + v));
 	}
 
-	private void createMTDFileFromResultList(FileResult fileResultList) {
+	public void createSMTDFileFromResultList(List<FileResult> fileResultList, String directoryName) {
 		// TODO Auto-generated method stub
 		PrintStream out;
 		try {
-			out = new PrintStream(new File(FilenameUtils.removeExtension(fileResultList.getFileName()) + ".mtd"));
+			System.out.println("Creating SMTD for directory : " + directoryName);
+			
+			out = new PrintStream(
+					new File(directoryName + "/" + directoryName.substring(directoryName.lastIndexOf("\\") + 1))
+							+ ".smtd");
+			
+			out.println("Result Sorted on :");
 
-			fileResultList.getResultMap().forEach((k,v) -> out.println(k + " : " + v));
+			fileResultList.stream().forEach(fileResult -> {
+				out.println(fileResult.getFileName());
+				this.writeResultMapToFile(fileResult.getResultMap(), out);
+				out.println();
+			});
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void createMTDFileFromResultList(FileResult fileResult) {
+		// TODO Auto-generated method stub
+		PrintStream out;
+		try {
+			System.out.println("Creating MTD for file : " + fileResult.getFileName());
+			out = new PrintStream(new File(FilenameUtils.removeExtension(fileResult.getFileName()) + ".mtd"));
+			this.writeResultMapToFile(fileResult.getResultMap(), out);
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block

@@ -1,4 +1,4 @@
-package com.ace.DirectoryMetaData;
+package com.ace.DirectoryMetaData.runnable;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -12,7 +12,7 @@ import java.util.concurrent.Callable;
 import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.CountResult;
 import com.ace.DirectoryMetaData.model.FileResult;
-import com.ace.DirectoryMetaData.model.ResultFileExtension;
+import com.ace.DirectoryMetaData.model.OutputFileExtension;
 import com.ace.DirectoryMetaData.util.OutputFilePublisher;
 
 public class FileProcessorRunnable implements Callable<FileResult>{
@@ -35,11 +35,13 @@ public class FileProcessorRunnable implements Callable<FileResult>{
 
 		FileResult fileResult = new FileResult(this.fileName);
 
+		System.out.println("Calculating File Result for "  + this.fileName);
 		Map<CountParam, Long> resultMap = this.calculateFileResult();
 
 		fileResult.setResultMap(resultMap);
 		
-		outputFilePublisher.createOutputFromResultList(fileResult, ResultFileExtension.MTD);
+		System.out.println("Calling Output publisher for publishing MTD for "  + this.fileName);
+		outputFilePublisher.createOutputFromFileResult(fileResult, OutputFileExtension.MTD);
 		
 		System.out.println(Thread.currentThread().getName() + " finished processing " + this.fileName);
 		return fileResult;
@@ -61,8 +63,9 @@ public class FileProcessorRunnable implements Callable<FileResult>{
 			input = new Scanner(new FileReader(this.fileName));
 
 			if (!input.hasNext()) {
-				System.out.println("File is empty. Aborting Program");
-				return null;
+				System.out.println("File is empty. Setting default resultMap with 0 count");
+				this.getDefaultResultMap(resultMap);
+				return resultMap;
 			}
 
 			while (input.hasNextLine()) {
@@ -95,6 +98,14 @@ public class FileProcessorRunnable implements Callable<FileResult>{
 		}
 		
 		return resultMap;
+	}
+
+	private void getDefaultResultMap(Map<CountParam, Long> resultMap) {
+		// TODO Auto-generated method stub
+		resultMap.put(CountParam.WORDS, 0l);
+		resultMap.put(CountParam.LETTERS, 0l);
+		resultMap.put(CountParam.VOWELS, 0l);
+		resultMap.put(CountParam.SPECIAL_CHAR, 0l);
 	}
 
 }
