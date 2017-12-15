@@ -1,9 +1,6 @@
 package com.ace.DirectoryMetaData.runnable;
 
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.Directory;
@@ -12,8 +9,6 @@ import com.ace.DirectoryMetaData.processor.DirectoryProcessor;
 import com.ace.DirectoryMetaData.processor.impl.DirectoryProcessorImpl;
 
 public class DirectoryConsumerRunnable implements Runnable{
-	
-	ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
 	BlockingQueue<Directory> queue;
 	
