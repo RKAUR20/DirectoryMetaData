@@ -19,9 +19,9 @@ public class DirectoryScannerRunnable implements Runnable {
 	
 	BlockingQueue<Directory> queue;
 	
-	private Map<String, Boolean> fileCache;
+	private Map<String, Long> fileCache;
 	
-	public DirectoryScannerRunnable(String directoryPath, Map<String, Boolean> fileCache, BlockingQueue<Directory> queue) {
+	public DirectoryScannerRunnable(String directoryPath, Map<String, Long> fileCache, BlockingQueue<Directory> queue) {
 		super();
 		this.directoryPath = directoryPath;
 		this.fileCache = fileCache;
@@ -44,37 +44,41 @@ public class DirectoryScannerRunnable implements Runnable {
 
 		Collection<File> files = FileUtils.listFiles(root, extensions, recursive);
 
-		/* Filter files which are already in cache (means already processed), 
-		 * then group all txt and csv files into their parent directory */
-		Map<String, List<File>> directoryFilesMap = files.stream().filter(file -> !fileCache.containsKey(file.getAbsolutePath()))
+		/*
+		 * Filter files which are already in cache (means already processed), then group
+		 * all txt and csv files into their parent directory
+		 */
+		Map<String, List<File>> directoryFilesMap = files.stream()
+				.filter(file -> (!fileCache.containsKey(file.getAbsolutePath())
+						|| fileCache.get(file.getAbsolutePath()) != file.lastModified()))
 				.collect(Collectors.groupingBy(File::getParent, HashMap::new,
 						Collectors.mapping(Function.identity(), Collectors.toList())));
 
 		System.out.println(directoryFilesMap);
 
 		/*
-		 * Processing Directory - Files Map and adding each 
-		 * directory into blocking queue as well as putting all files in 
-		 * cache so that they are not picked in next scan.
-		 * */
+		 * Processing Directory - Files Map and adding each directory into blocking
+		 * queue as well as putting all files in cache so that they are not picked in
+		 * next scan.
+		 */
 		directoryFilesMap.forEach((key, value) -> {
-			
+
 			Directory directory = new Directory();
 			directory.setName(key);
-			
+
 			value.stream().forEach(v -> {
 				System.out.println(v.lastModified());
 				directory.getFiles().add(v.getAbsolutePath());
-				fileCache.put(v.getAbsolutePath(), Boolean.FALSE);
+				fileCache.put(v.getAbsolutePath(), v.lastModified());
 			});
-			
+
 			System.out.println("Directory " + directory + " added in queue.");
 			queue.add(directory);
-			
+
 			System.out.println(queue);
 
 		});
-		
+
 		System.out.println("Directory scanning completed");
 	}
 

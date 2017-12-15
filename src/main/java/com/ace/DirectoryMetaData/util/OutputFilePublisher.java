@@ -11,6 +11,7 @@ import org.apache.commons.io.FilenameUtils;
 import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.FileResult;
 import com.ace.DirectoryMetaData.model.OutputFileExtension;
+import com.ace.DirectoryMetaData.model.SortOrder;
 
 public class OutputFilePublisher {
 
@@ -52,7 +53,7 @@ public class OutputFilePublisher {
 		resultMap.forEach((k,v) -> out.println(k + " : " + v));
 	}
 
-	public void createSMTDFileFromResultList(List<FileResult> fileResultList, String directoryName) {
+	public void createSMTDFileFromResultList(List<FileResult> fileResultList, String directoryName, SortOrder sortOrder, CountParam sortParam) {
 		// TODO Auto-generated method stub
 		PrintStream out;
 		try {
@@ -62,7 +63,7 @@ public class OutputFilePublisher {
 					new File(directoryName + "/" + directoryName.substring(directoryName.lastIndexOf("\\") + 1))
 							+ ".smtd");
 			
-			out.println("Result Sorted on :");
+			out.println("Result Sorted " + sortOrder + " on " + sortParam);
 
 			fileResultList.stream().forEach(fileResult -> {
 				out.println(fileResult.getFileName());

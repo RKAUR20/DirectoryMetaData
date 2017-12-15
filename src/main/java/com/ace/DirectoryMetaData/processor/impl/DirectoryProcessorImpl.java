@@ -16,11 +16,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import com.ace.DirectoryMetaData.comparator.FileResultComparator;
-import com.ace.DirectoryMetaData.model.CountParam;
-import com.ace.DirectoryMetaData.model.CountResult;
 import org.apache.commons.io.FileUtils;
 
+import com.ace.DirectoryMetaData.comparator.FileResultComparator;
+import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.Directory;
 import com.ace.DirectoryMetaData.model.FileResult;
 import com.ace.DirectoryMetaData.model.OutputFileExtension;
@@ -33,14 +32,37 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 	
 	ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
-	Directory directory;
+	private Directory directory;
+	
+	private SortOrder sortOrder;
+	
+	public SortOrder getSortOrder() {
+		return sortOrder;
+	}
+
+	public void setSortOrder(SortOrder sortOrder) {
+		this.sortOrder = sortOrder;
+	}
+
+	public CountParam getSortParam() {
+		return sortParam;
+	}
+
+	public void setSortParam(CountParam sortParam) {
+		this.sortParam = sortParam;
+	}
+
+	public DirectoryProcessorImpl(Directory directory, SortOrder sortOrder, CountParam sortParam) {
+		super();
+		this.directory = directory;
+		this.sortOrder = sortOrder;
+		this.sortParam = sortParam;
+		this.outputFilePublisher = new OutputFilePublisher();
+	}
+
+	private CountParam sortParam;
 	
 	private OutputFilePublisher outputFilePublisher;
-
-	public DirectoryProcessorImpl(Directory directory) {
-		this.directory = directory;
-		outputFilePublisher = new OutputFilePublisher();
-	}
 
 	@Override
 	public void processDirectory() {
@@ -87,14 +109,14 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 	private void calculateAndCreateSMTDResult(List<FileResult> fileResultList) {
 		// TODO Auto-generated method stub
 		System.out.println("Sorting MTDS for " + directory.getName() + " Directory");
-		Collections.sort(fileResultList, new FileResultComparator(CountParam.WORDS, SortOrder.DESC));
+		Collections.sort(fileResultList, new FileResultComparator(sortParam, sortOrder));
 		fileResultList.stream().forEach(fileResult -> {
 			System.out.println(fileResult.toString());
 		});
 		
 		System.out.println("Calling Output publisher for SMTD of " + directory.getName() + " Directory");
 		
-		outputFilePublisher.createSMTDFileFromResultList(fileResultList, directory.getName());
+		outputFilePublisher.createSMTDFileFromResultList(fileResultList, directory.getName(),sortOrder,sortParam);
 	}
 
 	private void calculateAndCreateDMTDResult(List<FileResult> fileResultList) {
