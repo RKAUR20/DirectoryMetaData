@@ -45,8 +45,9 @@ public class DirectoryScannerRunnable implements Runnable {
 		Collection<File> files = FileUtils.listFiles(root, extensions, recursive);
 
 		/*
-		 * Filter files which are already in cache (means already processed), then group
-		 * all txt and csv files into their parent directory
+		 * Filter files which are already in cache (means already processed) 
+		 * or which are modified (this is checked usng file modification time, 
+		 * then group all txt and csv files into their parent directory
 		 */
 		Map<String, List<File>> directoryFilesMap = files.stream()
 				.filter(file -> (!fileCache.containsKey(file.getAbsolutePath())
