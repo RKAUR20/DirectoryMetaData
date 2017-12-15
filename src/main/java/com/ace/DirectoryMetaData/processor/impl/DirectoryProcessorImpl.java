@@ -17,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import com.ace.DirectoryMetaData.comparator.FileResultComparator;
 import com.ace.DirectoryMetaData.model.CountParam;
@@ -86,7 +87,7 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 		 * and let other threads calculate MTD result for new files added in the directory..
 		 */
 		List<FileResult> fileResultList = this.getAlreadyCalculatedMTDResult();
-		
+		System.out.println(fileResultList);
 		System.out.println("Fetching existing MTD result List for " + directory.getName() + " completed");
 		
 		//Adding new files Result list to already existing MTD Result list
@@ -166,7 +167,7 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 
 		//Get all MTD files list in directory.
 		Collection<File> allMTDfiles = FileUtils.listFiles(root, extensions, recursive);
-		
+		System.out.println(allMTDfiles);
 		/* There could be a case that while we are fetching existing MTDs, 
 		 * executor thread has created MTD for new file. So filtering out new MTDS. */
 		Collection<File> filterMTDs = allMTDfiles.stream()
@@ -178,10 +179,10 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 	private Boolean exists(List<String> files, String absolutePath) {
 		// TODO Auto-generated method stub
 		for (String file : files) {
-			if (file.equals(absolutePath))
-				return true;
+			if (FilenameUtils.removeExtension(file).equals(FilenameUtils.removeExtension(absolutePath)))
+				return false;
 		}
-		return false;
+		return true;
 	}
 
 	private List<FileResult> convertMTDsToFileResultList(Collection<File> filterMTDs) {

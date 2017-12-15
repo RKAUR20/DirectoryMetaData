@@ -50,7 +50,7 @@ public class MainClass {
 		DirectoryConsumerRunnable consumerTask = new DirectoryConsumerRunnable(queue,
 				"ASC".equals(sortOrder) ? SortOrder.ASC : SortOrder.DESC, CountParam.getEnumFromParam(sortParam));
 
-		pollingScheduler.scheduleAtFixedRate(scannerTask, 0, 30, TimeUnit.MINUTES);
+		pollingScheduler.scheduleAtFixedRate(scannerTask, 0, 30, TimeUnit.SECONDS);
 
 		new Thread(consumerTask).start();
 
