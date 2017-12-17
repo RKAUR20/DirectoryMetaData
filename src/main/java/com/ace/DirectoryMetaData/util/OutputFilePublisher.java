@@ -42,6 +42,7 @@ public class OutputFilePublisher {
 
 			this.writeResultMapToFile(fileResult.getResultMap(), out);
 
+			out.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -70,7 +71,8 @@ public class OutputFilePublisher {
 				this.writeResultMapToFile(fileResult.getResultMap(), out);
 				out.println();
 			});
-
+			
+			out.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -84,7 +86,7 @@ public class OutputFilePublisher {
 			System.out.println("Creating MTD for file : " + fileResult.getFileName());
 			out = new PrintStream(new File(FilenameUtils.removeExtension(fileResult.getFileName()) + ".mtd"));
 			this.writeResultMapToFile(fileResult.getResultMap(), out);
-
+			out.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

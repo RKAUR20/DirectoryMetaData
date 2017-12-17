@@ -1,5 +1,6 @@
 package com.ace.DirectoryMetaData;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -8,9 +9,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.Directory;
-import com.ace.DirectoryMetaData.model.SortOrder;
+import com.ace.DirectoryMetaData.runnable.CacheRefreshRunnable;
 import com.ace.DirectoryMetaData.runnable.DirectoryConsumerRunnable;
 import com.ace.DirectoryMetaData.runnable.DirectoryScannerRunnable;
 
@@ -26,32 +26,37 @@ public class MainClass {
 	 */
 	static BlockingQueue<Directory> queue;
 	
-	/* This program requires three command line parameter, 
-	 * path of directory from where scanning should start, 
-	 * sorting parameter (WORDS,VOWELS,LETTERS,SPECIAL_CHAR),
-	 * and sorting order (either ASC or DESC).
+	/* This program requires one command line parameter, path of directory from where scanning should start, 
+	 * It also takes sort preference from property file, kept at src/main/resources/directorymetadata.properties.
 	 */
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws InterruptedException, IOException {
 
-		String directoryPath = args[0];
-
-		String sortParam = args[1];
-
-		String sortOrder = args[2];
+		String directoryPath = "D://";
 
 		fileCache = new HashMap<String, Long>();
 
 		queue = new LinkedBlockingQueue<>();
 
+		/* Cache Refresh Task - this will clear fileCache hashmap so that scanner starts scanning from start. 
+		 * This is required so as to capture deleted or renamed Files, as in case files already processed are renamed 
+		 * or deleted they wont be picked by directory Scanner. So, DMTD and SMTD can be in inconsistent State. 
+		 * This will also check if Sort preference kept in property file is changed to something else. It will reset to new sort preference.
+		 * This task will be rescheduled after 24 Hours.
+		 */
+		ScheduledExecutorService refreshScheduler = Executors.newSingleThreadScheduledExecutor();
+		CacheRefreshRunnable refreshTask = new CacheRefreshRunnable(fileCache);
+		refreshScheduler.scheduleAtFixedRate(refreshTask, 0, 24, TimeUnit.HOURS);
+
+		/* Directory Scanner task - this task will poll files from the given directory Path. 
+		 * It will start after 1 minute, so by that time sort preferences are set by cache refresh task. 
+		 * It will be rescheduled after 30 minutes and will scan newly created and as well as modified files.
+		 */
 		ScheduledExecutorService pollingScheduler = Executors.newSingleThreadScheduledExecutor();
-
 		DirectoryScannerRunnable scannerTask = new DirectoryScannerRunnable(directoryPath, fileCache, queue);
-
-		DirectoryConsumerRunnable consumerTask = new DirectoryConsumerRunnable(queue,
-				"ASC".equals(sortOrder) ? SortOrder.ASC : SortOrder.DESC, CountParam.getEnumFromParam(sortParam));
-
-		pollingScheduler.scheduleAtFixedRate(scannerTask, 0, 30, TimeUnit.SECONDS);
-
+		pollingScheduler.scheduleAtFixedRate(scannerTask, 1, 30, TimeUnit.MINUTES);
+		
+		//Directory Consumer task - It will consume Blocking Queue's entry and will process (create MTD, DMTD, SMTD) them. 
+		DirectoryConsumerRunnable consumerTask = new DirectoryConsumerRunnable(queue);
 		new Thread(consumerTask).start();
 
 	}

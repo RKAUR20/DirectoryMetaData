@@ -24,45 +24,23 @@ import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.Directory;
 import com.ace.DirectoryMetaData.model.FileResult;
 import com.ace.DirectoryMetaData.model.OutputFileExtension;
-import com.ace.DirectoryMetaData.model.SortOrder;
 import com.ace.DirectoryMetaData.processor.DirectoryProcessor;
 import com.ace.DirectoryMetaData.runnable.FileProcessorRunnable;
 import com.ace.DirectoryMetaData.util.OutputFilePublisher;
+import com.ace.DirectoryMetaData.util.SortPreferrence;
 
 public class DirectoryProcessorImpl implements DirectoryProcessor{
 	
 	ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
 	private Directory directory;
-	
-	private SortOrder sortOrder;
-	
-	public SortOrder getSortOrder() {
-		return sortOrder;
-	}
 
-	public void setSortOrder(SortOrder sortOrder) {
-		this.sortOrder = sortOrder;
-	}
-
-	public CountParam getSortParam() {
-		return sortParam;
-	}
-
-	public void setSortParam(CountParam sortParam) {
-		this.sortParam = sortParam;
-	}
-
-	public DirectoryProcessorImpl(Directory directory, SortOrder sortOrder, CountParam sortParam) {
+	public DirectoryProcessorImpl(Directory directory) {
 		super();
 		this.directory = directory;
-		this.sortOrder = sortOrder;
-		this.sortParam = sortParam;
 		this.outputFilePublisher = new OutputFilePublisher();
 	}
 
-	private CountParam sortParam;
-	
 	private OutputFilePublisher outputFilePublisher;
 
 	@Override
@@ -110,14 +88,16 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 	private void calculateAndCreateSMTDResult(List<FileResult> fileResultList) {
 		// TODO Auto-generated method stub
 		System.out.println("Sorting MTDS for " + directory.getName() + " Directory");
-		Collections.sort(fileResultList, new FileResultComparator(sortParam, sortOrder));
+		Collections.sort(fileResultList, new FileResultComparator(SortPreferrence.getInstance().getParam(),
+				SortPreferrence.getInstance().getOrder()));
 		fileResultList.stream().forEach(fileResult -> {
 			System.out.println(fileResult.toString());
 		});
-		
+
 		System.out.println("Calling Output publisher for SMTD of " + directory.getName() + " Directory");
-		
-		outputFilePublisher.createSMTDFileFromResultList(fileResultList, directory.getName(),sortOrder,sortParam);
+
+		outputFilePublisher.createSMTDFileFromResultList(fileResultList, directory.getName(),
+				SortPreferrence.getInstance().getOrder(), SortPreferrence.getInstance().getParam());
 	}
 
 	private void calculateAndCreateDMTDResult(List<FileResult> fileResultList) {

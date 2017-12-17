@@ -2,15 +2,12 @@ package com.ace.DirectoryMetaData.runnable;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
 
 import com.ace.DirectoryMetaData.model.CountParam;
-import com.ace.DirectoryMetaData.model.CountResult;
 import com.ace.DirectoryMetaData.model.FileResult;
 import com.ace.DirectoryMetaData.model.OutputFileExtension;
 import com.ace.DirectoryMetaData.util.OutputFilePublisher;
@@ -91,6 +88,8 @@ public class FileProcessorRunnable implements Callable<FileResult>{
 			resultMap.put(CountParam.LETTERS, countCharacters);
 			resultMap.put(CountParam.VOWELS, vowelCount);
 			resultMap.put(CountParam.SPECIAL_CHAR, 0l);
+			
+			input.close();
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block

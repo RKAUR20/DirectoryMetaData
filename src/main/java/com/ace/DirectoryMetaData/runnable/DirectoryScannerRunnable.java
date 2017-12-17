@@ -46,7 +46,7 @@ public class DirectoryScannerRunnable implements Runnable {
 
 		/*
 		 * Filter files which are already in cache (means already processed) 
-		 * or which are modified (this is checked usng file modification time, 
+		 * or which are modified (this is checked using file modification time, 
 		 * then group all txt and csv files into their parent directory
 		 */
 		Map<String, List<File>> directoryFilesMap = files.stream()

@@ -13,10 +13,6 @@ public class DirectoryConsumerRunnable implements Runnable{
 	BlockingQueue<Directory> queue;
 	
 	private DirectoryProcessor directoryProcessor;
-	
-	private SortOrder sortOrder;
-
-	private CountParam sortParam;
 
 	public DirectoryProcessor getDirectoryProcessor() {
 		return directoryProcessor;
@@ -26,11 +22,9 @@ public class DirectoryConsumerRunnable implements Runnable{
 		this.directoryProcessor = directoryProcessor;
 	}
 
-	public DirectoryConsumerRunnable(BlockingQueue<Directory> queue, SortOrder sortOrder, CountParam sortParam) {
+	public DirectoryConsumerRunnable(BlockingQueue<Directory> queue) {
 		super();
 		this.queue = queue;
-		this.sortOrder = sortOrder;
-		this.sortParam = sortParam;
 	}
 
 	@Override
@@ -42,7 +36,7 @@ public class DirectoryConsumerRunnable implements Runnable{
 			try {
 				Directory directory = queue.take();
 				System.out.println(directory.getName() + " received for processing.");
-				directoryProcessor = new DirectoryProcessorImpl(directory, sortOrder, sortParam);
+				directoryProcessor = new DirectoryProcessorImpl(directory);
 				directoryProcessor.processDirectory();
 				System.out.println(directory.getName() + " processed.");
 			} catch (InterruptedException e) {
