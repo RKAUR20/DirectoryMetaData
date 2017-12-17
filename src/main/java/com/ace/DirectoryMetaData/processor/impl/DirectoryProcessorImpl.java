@@ -33,18 +33,15 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 	
 	ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
-	private Directory directory;
-
-	public DirectoryProcessorImpl(Directory directory) {
+	public DirectoryProcessorImpl() {
 		super();
-		this.directory = directory;
 		this.outputFilePublisher = new OutputFilePublisher();
 	}
 
 	private OutputFilePublisher outputFilePublisher;
 
 	@Override
-	public void processDirectory() {
+	public void processDirectory(Directory directory) {
 		// TODO Auto-generated method stub
 		System.out.println("Processing of " + directory.getName() + " started.");
 
@@ -64,7 +61,7 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 		 * get their Result into FileResult object for calculating new DMTD and SMTD
 		 * and let other threads calculate MTD result for new files added in the directory..
 		 */
-		List<FileResult> fileResultList = this.getAlreadyCalculatedMTDResult();
+		List<FileResult> fileResultList = this.getAlreadyCalculatedMTDResult(directory);
 		System.out.println(fileResultList);
 		System.out.println("Fetching existing MTD result List for " + directory.getName() + " completed");
 		
@@ -79,13 +76,13 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 		});
 		
 		System.out.println(directory.getName() + "Submitted for DMTD and SMTD");
-		executorService.submit(() -> this.calculateAndCreateDMTDResult(fileResultList));
-		executorService.submit(() -> this.calculateAndCreateSMTDResult(fileResultList));
+		executorService.submit(() -> this.calculateAndCreateDMTDResult(fileResultList, directory));
+		executorService.submit(() -> this.calculateAndCreateSMTDResult(fileResultList, directory));
 		System.out.println("Processing of " + directory.getName() + " ended.");
 
 	}
 
-	private void calculateAndCreateSMTDResult(List<FileResult> fileResultList) {
+	private void calculateAndCreateSMTDResult(List<FileResult> fileResultList, Directory directory) {
 		// TODO Auto-generated method stub
 		System.out.println("Sorting MTDS for " + directory.getName() + " Directory");
 		Collections.sort(fileResultList, new FileResultComparator(SortPreferrence.getInstance().getParam(),
@@ -100,7 +97,7 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 				SortPreferrence.getInstance().getOrder(), SortPreferrence.getInstance().getParam());
 	}
 
-	private void calculateAndCreateDMTDResult(List<FileResult> fileResultList) {
+	private void calculateAndCreateDMTDResult(List<FileResult> fileResultList, Directory directory) {
 		// TODO Auto-generated method stub
 		System.out.println("Calculating DMTD result for " + directory.getName());
 		FileResult directoryResult = new FileResult(directory.getName());
@@ -139,15 +136,15 @@ public class DirectoryProcessorImpl implements DirectoryProcessor{
 		System.out.println("calculateAndCreateDMTDResult");
 	}
 
-	private List<FileResult> getAlreadyCalculatedMTDResult() {
+	private List<FileResult> getAlreadyCalculatedMTDResult(Directory directory) {
 		// TODO Auto-generated method stub
-		File root = new File(this.directory.getName());
+		File root = new File(directory.getName());
 		String[] extensions = { "mtd" };
 		boolean recursive = false;
 
 		//Get all MTD files list in directory.
 		Collection<File> allMTDfiles = FileUtils.listFiles(root, extensions, recursive);
-		System.out.println(allMTDfiles);
+
 		/* There could be a case that while we are fetching existing MTDs, 
 		 * executor thread has created MTD for new file. So filtering out new MTDS. */
 		Collection<File> filterMTDs = allMTDfiles.stream()

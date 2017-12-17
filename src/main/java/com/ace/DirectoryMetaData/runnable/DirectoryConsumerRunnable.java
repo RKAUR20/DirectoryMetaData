@@ -2,9 +2,7 @@ package com.ace.DirectoryMetaData.runnable;
 
 import java.util.concurrent.BlockingQueue;
 
-import com.ace.DirectoryMetaData.model.CountParam;
 import com.ace.DirectoryMetaData.model.Directory;
-import com.ace.DirectoryMetaData.model.SortOrder;
 import com.ace.DirectoryMetaData.processor.DirectoryProcessor;
 import com.ace.DirectoryMetaData.processor.impl.DirectoryProcessorImpl;
 
@@ -25,6 +23,7 @@ public class DirectoryConsumerRunnable implements Runnable{
 	public DirectoryConsumerRunnable(BlockingQueue<Directory> queue) {
 		super();
 		this.queue = queue;
+		directoryProcessor = new DirectoryProcessorImpl();
 	}
 
 	@Override
@@ -36,8 +35,7 @@ public class DirectoryConsumerRunnable implements Runnable{
 			try {
 				Directory directory = queue.take();
 				System.out.println(directory.getName() + " received for processing.");
-				directoryProcessor = new DirectoryProcessorImpl(directory);
-				directoryProcessor.processDirectory();
+				directoryProcessor.processDirectory(directory);
 				System.out.println(directory.getName() + " processed.");
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block

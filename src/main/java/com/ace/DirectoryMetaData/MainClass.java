@@ -31,7 +31,7 @@ public class MainClass {
 	 */
 	public static void main(String[] args) throws InterruptedException, IOException {
 
-		String directoryPath = "D://";
+		String directoryPath = args[0];
 
 		fileCache = new HashMap<String, Long>();
 
@@ -40,11 +40,12 @@ public class MainClass {
 		/* Cache Refresh Task - this will clear fileCache hashmap so that scanner starts scanning from start. 
 		 * This is required so as to capture deleted or renamed Files, as in case files already processed are renamed 
 		 * or deleted they wont be picked by directory Scanner. So, DMTD and SMTD can be in inconsistent State. 
+		 * This also deletes existing MTD, DMTD and SMTD files.
 		 * This will also check if Sort preference kept in property file is changed to something else. It will reset to new sort preference.
 		 * This task will be rescheduled after 24 Hours.
 		 */
 		ScheduledExecutorService refreshScheduler = Executors.newSingleThreadScheduledExecutor();
-		CacheRefreshRunnable refreshTask = new CacheRefreshRunnable(fileCache);
+		CacheRefreshRunnable refreshTask = new CacheRefreshRunnable(fileCache, directoryPath);
 		refreshScheduler.scheduleAtFixedRate(refreshTask, 0, 24, TimeUnit.HOURS);
 
 		/* Directory Scanner task - this task will poll files from the given directory Path. 

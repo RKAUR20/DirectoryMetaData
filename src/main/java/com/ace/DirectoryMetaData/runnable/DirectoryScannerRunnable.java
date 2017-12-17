@@ -68,15 +68,12 @@ public class DirectoryScannerRunnable implements Runnable {
 			directory.setName(key);
 
 			value.stream().forEach(v -> {
-				System.out.println(v.lastModified());
 				directory.getFiles().add(v.getAbsolutePath());
 				fileCache.put(v.getAbsolutePath(), v.lastModified());
 			});
 
 			System.out.println("Directory " + directory + " added in queue.");
 			queue.add(directory);
-
-			System.out.println(queue);
 
 		});
 
